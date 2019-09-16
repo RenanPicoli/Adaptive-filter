@@ -1,0 +1,8 @@
+# mp3 files used in tests
+*.mp3
+*.ogg
+*.wav
+*.asv
+
+rise_original
+rise_filtrado
