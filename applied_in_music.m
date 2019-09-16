@@ -137,4 +137,3 @@ norma_grad(i)=norm(grad(i,:));
 end
 title('evolução da norma do grad')
 plot(norma_grad)
-
