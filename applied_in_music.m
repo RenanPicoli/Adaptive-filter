@@ -13,8 +13,8 @@ step = 1e-4;%input("Entre com o tamanho do passo:") (para cálculo do grad: não i
 tol=1e-2;%input("Entre com o valor da tolerância no erro entre y e d (norma euclidiana):")
 
 % para o método do gradiente descendente
-step_grad = 1e-4;
-max_iter=3000; % máximo de iterações 
+step_grad = 5e-6;
+max_iter=5000; % máximo de iterações 
 
 filter=ones(1,N,max_iter);
 % filter(1,:,1)=[1 2 3];
@@ -29,7 +29,7 @@ x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
 downsample_factor = 2;
 x = downsample(x,downsample_factor);
 min_x=700;
-max_x=1000000;
+max_x=360000;
 x = x(min_x:max_x);
 %x=[zeros(1,N) sin(50*(1:1000*N))];
 % x=[zeros(1,N) rand(1, 1000*N)];
