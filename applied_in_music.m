@@ -25,7 +25,7 @@ fs = 44100;% original sampling frequency
 
 x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
 
-% pkg load signal % para usar downsample()
+pkg load signal % para usar downsample()
 downsample_factor = 2;
 x = downsample(x,downsample_factor);
 min_x=700;
