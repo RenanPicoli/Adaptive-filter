@@ -13,7 +13,7 @@ step = 1e-4;%input("Entre com o tamanho do passo:") (para cálculo do grad: não i
 tol=1e-2;%input("Entre com o valor da tolerância no erro entre y e d (norma euclidiana):")
 
 % para o método do gradiente descendente
-step_grad = 5e-6;
+step_grad = 5e-6;%valor INICIAL da constante para o gradiente descendente
 max_iter=5000; % máximo de iterações 
 
 filter=ones(1,N,max_iter);
@@ -57,6 +57,9 @@ while condition % cálculo de filtro em n+1 usando filtro em n
 		grad(n,j) = (norm(conv(filter(:,:,n) + delta(j,:),x) - d)-err(n))/step;
 	end
 
+  if (norm(grad(n,:))!=0)
+    step_grad = err(n)/(norm(grad(n,:)))^2;% análogo ao método de Newton-Raphson
+  end
 	filter(:,:,n+1) = filter(:,:,n) - step_grad*grad(n,:);
 
 	err(n+1)=norm(conv(filter(:,:,n+1),x) - d);
