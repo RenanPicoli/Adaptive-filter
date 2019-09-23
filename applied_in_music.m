@@ -45,18 +45,23 @@ condition=true;
 n=1; % index of iteration being performed
 
 delta=step*eye(N);
-err=zeros(1,N);
+err=zeros(1,max_iter);
 grad = zeros(max_iter,N);
+norma_grad = zeros(1,max_iter);
 
 % método do gradiente descendente
 while condition % cálculo de filtro em n+1 usando filtro em n
 	err(n)=norm(conv(filter(:,:,n),x) - d); % sempre positivo, tem mínimo global onde se anula
 
-    % cálculo do gradiente
+  % cálculo do gradiente
 	for j=1:N
 		grad(n,j) = (norm(conv(filter(:,:,n) + delta(j,:),x) - d)-err(n))/step;
-	end
+    end
 
+    norma_grad(n)=norm(grad(n,:));
+    if (norma_grad(n)~=0)
+       step_grad = err(n)/(norma_grad(n)*norma_grad(n));% análogo ao método de Newton-Raphson
+    end
 	filter(:,:,n+1) = filter(:,:,n) - step_grad*grad(n,:);
 
 	err(n+1)=norm(conv(filter(:,:,n+1),x) - d);
@@ -131,9 +136,9 @@ title('grad')
 
 figure
 hold on
-norma_grad=zeros(1,n);
-for i=1:n
-norma_grad(i)=norm(grad(i,:));
-end
+% norma_grad=zeros(1,n);
+% for i=1:n
+% norma_grad(i)=norm(grad(i,:));
+% end
 title('evolução da norma do grad')
-plot(norma_grad)
+plot(norma_grad(1:n))
