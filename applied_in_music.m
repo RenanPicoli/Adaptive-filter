@@ -14,7 +14,7 @@ tol=1e-2;%input("Entre com o valor da tolerância no erro entre y e d (norma eucl
 
 % para o método do gradiente descendente
 step_grad = 5e-6;%valor INICIAL da constante para o gradiente descendente
-max_iter=5000; % máximo de iterações 
+max_iter=200; % máximo de iterações 
 
 filter=ones(1,N,max_iter);
 % filter(1,:,1)=[1 2 3];
@@ -28,7 +28,7 @@ x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
 pkg load signal % para usar downsample()
 downsample_factor = 2;
 x = downsample(x,downsample_factor);
-min_x=700;
+min_x=1828;
 max_x=360000;
 x = x(min_x:max_x);
 %x=[zeros(1,N) sin(50*(1:1000*N))];
@@ -45,20 +45,22 @@ condition=true;
 n=1; % index of iteration being performed
 
 delta=step*eye(N);
-err=zeros(1,N);
+err=zeros(1,max_iter);
 grad = zeros(max_iter,N);
+norma_grad=zeros(1,max_iter);
 
 % método do gradiente descendente
 while condition % cálculo de filtro em n+1 usando filtro em n
 	err(n)=norm(conv(filter(:,:,n),x) - d); % sempre positivo, tem mínimo global onde se anula
 
-    % cálculo do gradiente
+  % cálculo do gradiente
 	for j=1:N
 		grad(n,j) = (norm(conv(filter(:,:,n) + delta(j,:),x) - d)-err(n))/step;
 	end
 
-  if (norm(grad(n,:))!=0)
-    step_grad = err(n)/(norm(grad(n,:)))^2;% análogo ao método de Newton-Raphson
+  norma_grad(n)=norm(grad(n,:));
+  if (norma_grad(n)!=0)
+    step_grad = err(n)/(norma_grad(n)*norma_grad(n));% análogo ao método de Newton-Raphson
   end
 	filter(:,:,n+1) = filter(:,:,n) - step_grad*grad(n,:);
 
@@ -134,9 +136,9 @@ title('grad')
 
 figure
 hold on
-norma_grad=zeros(1,n);
-for i=1:n
-norma_grad(i)=norm(grad(i,:));
-end
+##norma_grad=zeros(1,n);
+##for i=1:n
+##norma_grad(i)=norm(grad(i,:));
+##end
 title('evolução da norma do grad')
-plot(norma_grad)
+plot(norma_grad(1:n))
