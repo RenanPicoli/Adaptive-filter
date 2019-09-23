@@ -1,3 +1,4 @@
+% ver: https://en.wikipedia.org/wiki/Least_mean_squares_filter
 clear;
 close all
 
@@ -53,7 +54,7 @@ norma_grad = zeros(1,max_iter);
 while condition % cálculo de filtro em n+1 usando filtro em n
 	err(n)=norm(conv(filter(:,:,n),x) - d); % sempre positivo, tem mínimo global onde se anula
 
-  % cálculo do gradiente
+    % cálculo do gradiente
 	for j=1:N
 		grad(n,j) = (norm(conv(filter(:,:,n) + delta(j,:),x) - d)-err(n))/step;
     end
