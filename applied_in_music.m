@@ -22,7 +22,7 @@ x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
 % pkg load signal % para usar downsample()
 downsample_factor = 2;
 x = downsample(x,downsample_factor);
-min_x=3200;% esse algoritmo precisa que x(1) != 0
+min_x=3200;% esse algoritmo precisa que xN != 0
 max_x=360000;
 x = x(min_x:max_x);
 %x=[zeros(1,N) sin(50*(1:1000*N))];
@@ -39,7 +39,7 @@ n=1; % index of iteration being performed/ sample being taken into account
 L=length(x);
 err=zeros(1,L);
 xN=zeros(1,N);% vector with last N samples
-filter=ones(1,N,L);
+filter=zeros(1,N,L);
 % filter(1,:,1)=[1 2 3];
 % max_iter=5000; % máximo de iterações 
 
@@ -52,10 +52,14 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
     n=n+1;	
 end
 
+
+w=filter(:,:,n-1);
+disp('Filtro calculado');
+disp(w)
+
 figure
 plot(d,'-b')
 hold on
-w=filter(:,:,n-1);
 plot(conv(w,x),'-r')
 title('Respostas')
 xt = min_x*downsample_factor/fs:max_x*downsample_factor/fs;
@@ -78,9 +82,6 @@ grid on
 disp('Número de iterações usadas:')
 disp(n-1)
 
-disp('Valor final do erro entre d e sequência gerada pelo filtro w:')
-disp(err(n-1))
-
 figure
 stem(w)
 hold on
@@ -88,17 +89,20 @@ stem([u zeros(1,N-length(u))])
 title('filtros')
 legend('filtro calculado','filtro desconhecido')
 
-figure
-hold on
-for i=1:100:n-1
-    plot(filter(:,:,i));
-end
-stem([u zeros(1,N-length(u))])
-title('filtros')
+% checking these plots, we see that our filter rapidly converges to the
+% unknown filter
 
-% fir=zeros(3,2000);
-% for i=1:2000
-% fir(1,i)=filter(1,1,i);
-% fir(2,i)=filter(1,2,i);
-% fir(3,i)=filter(1,3,i);
+% figure
+% hold on
+% for i=1:100:n-1
+%     plot(filter(:,:,i));
 % end
+% stem([u zeros(1,N-length(u))])
+% title('filtros')
+figure
+norma_erro_filtro=zeros(1,n-1);
+for i=1:n-1
+    norma_erro_filtro(i)=20*log10(norm(filter(:,:,i) - [u zeros(1,N-length(u))]));% erro em dB
+end
+plot(norma_erro_filtro);
+title('2-norma do erro entre os filtros em dB')
