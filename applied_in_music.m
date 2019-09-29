@@ -41,14 +41,25 @@ err=zeros(1,L);
 xN=zeros(1,N);% vector with last N samples
 filter=zeros(1,N,L);
 % filter(1,:,1)=[1 2 3];
-% max_iter=5000; % máximo de iterações 
+
+% max_iter=5000; % máximo de iterações
+
+% para convergir:erro percentual entre dois filtros consecutivos 
+tol = 1e-4;% |h(n)-h(n-1)| / |h(n)|
 
 % itera sobre as amostras
 for n=1:L % cálculo de filtro em n+1 usando filtro em n
     xN = [x(n) xN(1:N-1)];
 	err(n)=d(n) - filter(:,:,n)*xN.';% aproximação do erro: xN é aproximação do sinal completo
-	filter(:,:,n+1) = filter(:,:,n) + step_grad*err(n)*xN/(xN*xN.');
-
+    
+    if (xN*xN.' ~= 0)
+        delta_filter = step_grad*err(n)*xN/(xN*xN.');
+        filter(:,:,n+1) = filter(:,:,n) + delta_filter;
+        % testa se já convergiu
+        if(norm(delta_filter)/norm(filter(:,:,n)) < tol)
+            break;
+        end
+    end
     n=n+1;	
 end
 
