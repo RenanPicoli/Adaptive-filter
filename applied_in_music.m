@@ -6,9 +6,9 @@ close all
 % Objetivo: fazer um filtro cuja saída y para a excitação x seja igual a resposta desejada d 
 
 % pkg load control
-u=[0.5 sqrt(2)/2 0.5]%input("Entre com os coeficientes do filtro desconhecido:")
-
-N=6;%input("Entre com o número de coeficientes que deseja usar:")
+P=2;% número certo de zeros
+Q=2;% número certo de polos
+u=[0.5 sqrt(2)/2 0.5 -5 -6]%input("Entre com os coeficientes do filtro desconhecido:")
 
 % para o método do gradiente descendente
 step_grad = 1;
@@ -25,32 +25,35 @@ x = downsample(x,downsample_factor);
 min_x=3200;% esse algoritmo precisa que xN != 0
 max_x=360000;
 x = x(min_x:max_x);
-%x=[zeros(1,N) sin(50*(1:1000*N))];
-% x=[zeros(1,N) rand(1, 1000*N)];
 
 % filtrada = load('rise_filtrado','-ascii');
 % d = filtrada(:,1);
 % d = downsample(d,downsample_factor);
 % d = d(400:3000+N-1); % 3k + N-1 para ter o tamanho de conv(w,x)
-d=conv([u zeros(1,N-length(u))],x); % d of desired response
+% d=conv([u zeros(1,N-length(u))],x); % d of desired response
+d=filter(u(1:P+1),[1 -u(P+2:end)],x);% d of desired response, same length as x
 
 n=1; % index of iteration being performed/ sample being taken into account
 
+Pmax=3;
+Qmax=3;
+N=Pmax+Qmax+1;%input("Entre com o número de coeficientes que deseja usar:")
 L=length(x);
 err=zeros(1,L);
-xN=zeros(1,N);% vector with last N samples
-filter=zeros(1,N,L);
-% filter(1,:,1)=[1 2 3];
+xN=zeros(1,N);% vector with last Pmax+1 inputs AND last Qmax outputs
+filter=zeros(1,N,L); % REDEFINI filter, AGORA É UMA MATRIZ, NÃO POSSO USAR A FUNÇÃO DE MESMO NOME!
 
 % max_iter=5000; % máximo de iterações
 
-% para convergir:erro percentual entre dois filtros consecutivos 
+% para convergir: erro percentual entre dois filtros consecutivos 
 tol = 1e-4;% |h(n)-h(n-1)| / |h(n)|
 
 % itera sobre as amostras
 for n=1:L % cálculo de filtro em n+1 usando filtro em n
-    xN = [x(n) xN(1:N-1)];
-	err(n)=d(n) - filter(:,:,n)*xN.';% aproximação do erro: xN é aproximação do sinal completo
+  
+    %xN contém as últimas Pmax+1 entradas e Qmax saídas
+    xN = [x(n) xN(1:Pmax) d(n) xN(Pmax+2:N-1)];
+	  err(n)=d(n) - filter(:,:,n)*xN.';% aproximação do erro: xN é aproximação do sinal completo
     
     if (xN*xN.' ~= 0)
         delta_filter = step_grad*err(n)*xN/(xN*xN.');
