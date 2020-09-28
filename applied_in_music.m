@@ -33,8 +33,8 @@ d=filter(u(1:P+1),[1 -u(P+2:end)],x);% d of desired response, same length as x
 
 n=1; % index of iteration being performed/ sample being taken into account
 
-Pmax=2;
-Qmax=2;
+Pmax=1;
+Qmax=1;
 N=Pmax+Qmax+1;%input("Entre com o número de coeficientes que deseja usar:")
 L=length(x);
 err=zeros(1,L);
@@ -85,7 +85,11 @@ for i=1:N
   figure
   plot(filter_mat(:,i,1:n))
   hold on
-  plot(u(i)*ones(1,n))
+  if (i <= length(u))
+    plot(u(i)*ones(1,n))
+  else
+    plot(zeros(1,n))
+  end
   string = sprintf('%iº coeficiente',i);
   title(string)
 end
