@@ -6,12 +6,10 @@ close all
 % Objetivo: fazer um filtro cuja saída y para a excitação x seja igual a resposta desejada d 
 
 % pkg load control
-P=2;% número certo de zeros
-Q=2;% número certo de polos
-u=[0.5 sqrt(2)/2 0.5 -1 0]%input("Entre com os coeficientes do filtro desconhecido:")
-
-% para o método do gradiente descendente
-step_grad = 1;
+P=1;% número certo de zeros
+Q=1;% número certo de polos
+%u=[0.5 sqrt(2)/2 0.5 -1 -2]%input("Entre com os coeficientes do filtro desconhecido:")
+u=[0.5 -0.5]%coeficientes dos multiplicadores
 
 original = load('rise_original','-ascii');
 fs = 44100;% original sampling frequency
@@ -36,17 +34,19 @@ d=filter(u(1:P+1),[1 -u(P+2:end)],x);% d of desired response, same length as x
 n=1; % index of iteration being performed/ sample being taken into account
 
 Pmax=2;
-Qmax=1;
+Qmax=2;
 N=Pmax+Qmax+1;%input("Entre com o número de coeficientes que deseja usar:")
 L=length(x);
 err=zeros(1,L);
 xN=zeros(1,N);% vector with last Pmax+1 inputs AND last Qmax outputs
 filter_mat=zeros(1,N,L);
+alfa=zeros(Pmax+1,L);
+beta=zeros(Qmax,L);
 
 % max_iter=5000; % máximo de iterações
 
 % para convergir: erro percentual entre dois filtros consecutivos 
-tol = 1e-7;% |h(n)-h(n-1)| / |h(n)|
+tol = 1e-9;% |h(n)-h(n-1)| / |h(n)|
 
 % itera sobre as amostras
 for n=1:L % cálculo de filtro em n+1 usando filtro em n
@@ -54,14 +54,24 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
     %xN contém as últimas Pmax+1 entradas e Qmax saídas
     xN = [x(n) xN(1:Pmax) d(n) xN(Pmax+2:N-1)];
 	  err(n)=d(n) - filter_mat(:,:,n)*xN.';% aproximação do erro: xN é aproximação do sinal completo
+
+    if n>1
+      for i=1:Pmax+1 
+        alfa (i,n) = filter([1],[1 -filter_mat(:,Pmax+2:end,n)],xN(i));
+      end
+      for j=1:Qmax
+        beta (j,n) = filter([1],[1 -filter_mat(:,Pmax+2:end,n)],xN(Pmax+1+j));
+      end
+    else
+      alfa(:,1) = xN(1:Pmax+1);
+      beta(:,1) = xN(Pmax+2:end);
+    end
     
-    if (xN*xN.' ~= 0)
-        delta_filter = step_grad*err(n)*xN/(xN*xN.');
-        filter_mat(:,:,n+1) = filter_mat(:,:,n) + delta_filter;
-        % testa se já convergiu
-        if(norm(delta_filter)/norm(filter_mat(:,:,n)) < tol)
-            break;
-        end
+    delta_filter = -2*err(n)*[alfa(:,n)' beta(:,n)'];
+    filter_mat(:,:,n+1) = filter_mat(:,:,n) + delta_filter;
+    % testa se já convergiu
+    if(norm(delta_filter)/norm(filter_mat(:,:,n)) < tol)
+        break;
     end
     n=n+1;
 end
