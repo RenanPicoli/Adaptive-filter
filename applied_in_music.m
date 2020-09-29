@@ -6,13 +6,14 @@ close all
 % Objetivo: fazer um filtro cuja saída y para a excitação x seja igual a resposta desejada d 
 
 % pkg load control
-P=1;% número certo de zeros
+P=0;% número certo de zeros
 Q=1;% número certo de polos
 %u=[0.5 sqrt(2)/2 0.5 -1 -2]%input("Entre com os coeficientes do filtro desconhecido:")
 u=[0.5 -0.5]%coeficientes dos multiplicadores
 
-original = load('rise_original','-ascii');
-fs = 44100;% original sampling frequency
+%original = load('rise_original','-ascii');
+%fs = 44100;% original sampling frequency
+[original,fs] = audioread('rise_original');
 % original = audioread('Rise From The Ashes.mp3');
 
 x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
@@ -33,7 +34,7 @@ d=filter(u(1:P+1),[1 -u(P+2:end)],x);% d of desired response, same length as x
 
 n=1; % index of iteration being performed/ sample being taken into account
 
-Pmax=1;
+Pmax=0;
 Qmax=1;
 N=Pmax+Qmax+1;%input("Entre com o número de coeficientes que deseja usar:")
 L=length(x);
@@ -118,7 +119,7 @@ grid on
 
  figure
  hold on
- for i=1:n
+ for i=1:1000:n
      plot(filter_mat(:,:,i));
  end
  stem([u zeros(1,N-length(u))])
