@@ -13,7 +13,7 @@ u=[0.5 -0.5]%coeficientes dos multiplicadores
 
 %original = load('rise_original','-ascii');
 %fs = 44100;% original sampling frequency
-[original,fs] = audioread('rise_original');
+[original,fs] = audioread('Rise From The Ashes.ogg');
 % original = audioread('Rise From The Ashes.mp3');
 
 x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
@@ -43,11 +43,12 @@ xN=zeros(1,N);% vector with last Pmax+1 inputs AND last Qmax outputs
 filter_mat=zeros(1,N,L);
 alfa=zeros(Pmax+1,L);
 beta=zeros(Qmax,L);
+step=0.01;% this constant can be adjusted
 
 % max_iter=5000; % máximo de iterações
 
 % para convergir: erro percentual entre dois filtros consecutivos 
-tol = 1e-9;% |h(n)-h(n-1)| / |h(n)|
+tol = 1e-10;% |h(n)-h(n-1)| / |h(n)|
 
 % itera sobre as amostras
 for n=1:L % cálculo de filtro em n+1 usando filtro em n
@@ -68,7 +69,7 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
       beta(:,1) = xN(Pmax+2:end);
     end
     
-    delta_filter = -2*err(n)*[alfa(:,n)' beta(:,n)'];
+    delta_filter = 2*step*err(n)*[alfa(:,n)' beta(:,n)'];
     filter_mat(:,:,n+1) = filter_mat(:,:,n) + delta_filter;
     % testa se já convergiu
     if(norm(delta_filter)/norm(filter_mat(:,:,n)) < tol)
