@@ -28,11 +28,6 @@ min_x=3200;% esse algoritmo precisa que xN != 0
 max_x=30000;
 x = x(min_x:max_x);
 
-% filtrada = load('rise_filtrado','-ascii');
-% d = filtrada(:,1);
-% d = downsample(d,downsample_factor);
-% d = d(400:3000+N-1); % 3k + N-1 para ter o tamanho de conv(w,x)
-% d=conv([u zeros(1,N-length(u))],x); % d of desired response
 d=filter(u,[1],x);% d of desired response, same length as x. Could be conv(u,x)
 
 n=1; % index of iteration being performed/ sample being taken into account
