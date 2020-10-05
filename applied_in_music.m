@@ -9,14 +9,20 @@ close all
 P=0;% número certo de zeros
 Q=1;% número certo de polos
 %u=[0.5 sqrt(2)/2 0.5 -1 -2]%input("Entre com os coeficientes do filtro desconhecido:")
-u=[0.5 -0.5]%coeficientes dos multiplicadores
+
+% coeficientes dos multiplicadores no circuito
+% u(1:P+1): coeficientes de feed forward
+% u(P+2:end): coeficientes de feedback
+% u = [b0 .. bP a1 .. aQ]
+% y(n) = b0x(n)+..+bPx(n-P)+a1y(n-1)..aQy(n-Q)
+u=[0.5 -0.5]
 
 %original = load('rise_original','-ascii');
 %fs = 44100;% original sampling frequency
 [original,fs] = audioread('Rise From The Ashes.ogg');
-% original = audioread('Rise From The Ashes.mp3');
 
 x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
+%x=ones(1,62000);
 
 pkg load signal % para usar downsample()
 downsample_factor = 2;
@@ -25,11 +31,6 @@ min_x=3200;% esse algoritmo precisa que xN != 0
 max_x=30000;
 x = x(min_x:max_x);
 
-% filtrada = load('rise_filtrado','-ascii');
-% d = filtrada(:,1);
-% d = downsample(d,downsample_factor);
-% d = d(400:3000+N-1); % 3k + N-1 para ter o tamanho de conv(w,x)
-% d=conv([u zeros(1,N-length(u))],x); % d of desired response
 d=filter(u(1:P+1),[1 -u(P+2:end)],x);% d of desired response, same length as x
 
 n=1; % index of iteration being performed/ sample being taken into account
@@ -43,26 +44,29 @@ xN=zeros(1,N);% vector with last Pmax+1 inputs AND last Qmax outputs
 filter_mat=zeros(1,N,L);
 alfa=zeros(Pmax+1,L);
 beta=zeros(Qmax,L);
-step=0.01;% this constant can be adjusted
-
-% max_iter=5000; % máximo de iterações
+step=0.5;% this constant can be adjusted
 
 % para convergir: erro percentual entre dois filtros consecutivos 
 tol = 1e-10;% |h(n)-h(n-1)| / |h(n)|
 
 % itera sobre as amostras
 for n=1:L % cálculo de filtro em n+1 usando filtro em n
-  
     %xN contém as últimas Pmax+1 entradas e Qmax saídas
-    xN = [x(n) xN(1:Pmax) d(n) xN(Pmax+2:N-1)];
-	  err(n)=d(n) - filter_mat(:,:,n)*xN.';% aproximação do erro: xN é aproximação do sinal completo
+    % atualiza com última entrada
+    xN = [x(n) xN(1:Pmax) xN(Pmax+2:N)];
+    
+    yn = filter_mat(:,:,n)*xN.';% saída atual
+    % aproximação do erro: xN é aproximação do sinal completo
+	  err(n)=d(n) - yn;
 
     if n>1
       for i=1:Pmax+1 
-        alfa (i,n) = filter([1],[1 -filter_mat(:,Pmax+2:end,n)],xN(i));
+        %alfa (i,n) = filter([1],[1 -filter_mat(:,Pmax+2:end,n)],xN(i));
+        alfa (i,n) = xN(i)+ filter(filter_mat(:,Pmax+2:end,n),[1],alfa(i,n-Qmax:n-1));
       end
       for j=1:Qmax
-        beta (j,n) = filter([1],[1 -filter_mat(:,Pmax+2:end,n)],xN(Pmax+1+j));
+        %beta (j,n) = filter([1],[1 -filter_mat(:,Pmax+2:end,n)],xN(Pmax+1+j));
+        beta (j,n) = xN(Pmax+1+j) + filter(filter_mat(:,Pmax+2:end,n),[1],beta(j,n-Qmax:n-1));
       end
     else
       alfa(:,1) = xN(1:Pmax+1);
@@ -71,6 +75,9 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
     
     delta_filter = 2*step*err(n)*[alfa(:,n)' beta(:,n)'];
     filter_mat(:,:,n+1) = filter_mat(:,:,n) + delta_filter;
+    %xN contém as últimas Pmax+1 entradas e Qmax saídas
+    % atualiza com a saída atual (será o y(n-1) da próxima iteração)
+    xN = [xN(1:Pmax+1) yn xN(Pmax+2:N-1)];
     % testa se já convergiu
     if(norm(delta_filter)/norm(filter_mat(:,:,n)) < tol)
         break;
