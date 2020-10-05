@@ -7,15 +7,19 @@ close all
 % Objetivo: fazer um filtro cuja saída y para a excitação x seja igual a resposta desejada d 
 
 % pkg load control
+
+% coeficientes dos multiplicadores no circuito
+% u = [b0 .. bP]
+% y(n) = b0x(n)+..+bPx(n-P)
 u=[0.5 sqrt(2)/2 0.5]%input("Entre com os coeficientes do filtro desconhecido:")
 
 % para o método do gradiente descendente
 step_grad = 1;
 
-original = load('rise_original','-ascii');
-fs = 44100;% original sampling frequency
+[original,fs] = audioread('Rise From The Ashes.ogg');
 
 x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
+%x=ones(1,62000); if step function is applied, does not converge! 
 
 pkg load signal % para usar downsample()
 downsample_factor = 2;
@@ -39,8 +43,6 @@ err=zeros(1,L);
 xN=zeros(1,N);% vector with last N inputs
 filter_mat=zeros(1,N,L);
 
-% max_iter=5000; % máximo de iterações
-
 % para convergir: erro percentual entre dois filtros consecutivos 
 tol = 1e-6;% |h(n)-h(n-1)| / |h(n)|
 
@@ -59,16 +61,16 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
             break;
         end
     end
-    n=n+1;	
+    n=n+1;
 end
-
 n=n-1;
+disp('Número de iterações usadas:')
+disp(n)
+
 w=filter_mat(:,:,n);
 disp('Filtro calculado');
 disp(w)
 
-##disp('Resultados intermediários:')
-##disp(filter_mat(:,:,1:n))
 for i=1:N
   figure
   plot(filter_mat(:,i,1:n))
@@ -78,9 +80,9 @@ for i=1:N
   else
     plot(zeros(1,n))
   end
-  
   string = sprintf('%iº coeficiente',i);
   title(string)
+  grid on
 end
 
 figure
@@ -88,10 +90,11 @@ plot(d,'-b')
 hold on
 plot(conv(w,x),'-r')
 title('Respostas')
-xt = min_x*downsample_factor/fs:max_x*downsample_factor/fs;
-% altera a unidade do eixo x de amostras para segundos
-set(gca,'xticklabel',xt);
-xlabel('tempo(s)')
+##xt = min_x*downsample_factor/fs:max_x*downsample_factor/fs;
+##% altera a unidade do eixo x de amostras para segundos
+##set(gca,'xticklabel',xt);
+##xlabel('tempo(s)')
+grid on
 legend('filtro desconhecido','filtro adaptativo')
 
 figure
@@ -105,9 +108,6 @@ plot(20*log10(abs(err(1:n))))
 title('Erro em dB')
 grid on
 
-disp('Número de iterações usadas:')
-disp(n)
-
 figure
 stem(w)
 hold on
@@ -115,20 +115,22 @@ stem([u zeros(1,N-length(u))])
 title('filtros')
 legend('filtro calculado','filtro desconhecido')
 
-% checking these plots, we see that our filter rapidly converges to the
-% unknown filter
-
-% figure
-% hold on
-% for i=1:100:n
-%     plot(filter_mat(:,:,i));
-% end
-% stem([u zeros(1,N-length(u))])
-% title('filtros')
 figure
 norma_erro_filtro=zeros(1,n);
 for i=1:n
     norma_erro_filtro(i)=20*log10(norm(filter_mat(:,:,i) - [u zeros(1,N-length(u))]));% erro em dB
 end
 plot(norma_erro_filtro);
+grid on
 title('2-norma do erro entre os filtros em dB')
+
+% checking these plots, we see if our filter rapidly converges to the
+% unknown filter
+
+figure
+hold on
+for i=1:10:n
+    plot(filter_mat(:,:,i));
+end
+stem([u zeros(1,N-length(u))])
+title('filtros')
