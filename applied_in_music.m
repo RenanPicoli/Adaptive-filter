@@ -25,7 +25,9 @@ x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
 pkg load signal % para usar downsample()
 downsample_factor = 2;
 x = downsample(x,downsample_factor);
-min_x=3200;% esse algoritmo precisa que xN != 0
+% esse algoritmo precisa que xN != 0
+% para acelerar a convergência, pode-se aumentar a potência da entrada
+min_x=3200;
 max_x=30000;
 x = x(min_x:max_x);
 
@@ -42,10 +44,10 @@ xN=zeros(1,N);% vector with last Pmax+1 inputs AND last Qmax outputs
 filter_mat=zeros(1,N,L);
 alfa=zeros(Pmax+1,L);
 beta=zeros(Qmax,L);
-step=0.5;% this constant can be adjusted
+step=50;% this constant can be adjusted
 
 % para convergir: erro percentual entre dois filtros consecutivos 
-tol = 1e-9;% |h(n)-h(n-1)| / |h(n)|
+tol = 5e-7;% |h(n)-h(n-1)| / |h(n)|
 
 % itera sobre as amostras
 for n=1:L % cálculo de filtro em n+1 usando filtro em n
@@ -95,6 +97,7 @@ for i=1:N
   end
   string = sprintf('%iº coeficiente',i);
   title(string)
+  grid on
 end
 
 w=filter_mat(:,:,n);
@@ -121,7 +124,7 @@ grid on
 
  figure
  hold on
- for i=1:1000:n
+ for i=1:10:n
      plot(filter_mat(:,:,i));
  end
  stem([u zeros(1,N-length(u))])
@@ -132,8 +135,8 @@ plot(d,'-b')
 hold on
 plot(filter(w(1:Pmax+1),[1 -w(Pmax+2:end)],x),'-r')
 title('Respostas')
-xt = min_x*downsample_factor/fs:max_x*downsample_factor/fs;
-% altera a unidade do eixo x de amostras para segundos
-set(gca,'xticklabel',xt);
-xlabel('tempo(s)')
+##xt = min_x*downsample_factor/fs:max_x*downsample_factor/fs;
+##% altera a unidade do eixo x de amostras para segundos
+##set(gca,'xticklabel',xt);
+##xlabel('tempo(s)')
 legend('filtro desconhecido','filtro adaptativo')
