@@ -17,12 +17,10 @@ Q=1;% número certo de polos
 % y(n) = b0x(n)+..+bPx(n-P)+a1y(n-1)..aQy(n-Q)
 u=[0.5 -0.5]
 
-%original = load('rise_original','-ascii');
-%fs = 44100;% original sampling frequency
 [original,fs] = audioread('Rise From The Ashes.ogg');
 
 x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
-%x=ones(1,62000);
+%x=ones(1,62000); if step function is applied, does not converge! 
 
 pkg load signal % para usar downsample()
 downsample_factor = 2;
@@ -47,7 +45,7 @@ beta=zeros(Qmax,L);
 step=0.5;% this constant can be adjusted
 
 % para convergir: erro percentual entre dois filtros consecutivos 
-tol = 1e-10;% |h(n)-h(n-1)| / |h(n)|
+tol = 1e-9;% |h(n)-h(n-1)| / |h(n)|
 
 % itera sobre as amostras
 for n=1:L % cálculo de filtro em n+1 usando filtro em n
@@ -61,11 +59,9 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
 
     if n>1
       for i=1:Pmax+1 
-        %alfa (i,n) = filter([1],[1 -filter_mat(:,Pmax+2:end,n)],xN(i));
         alfa (i,n) = xN(i)+ filter(filter_mat(:,Pmax+2:end,n),[1],alfa(i,n-Qmax:n-1));
       end
       for j=1:Qmax
-        %beta (j,n) = filter([1],[1 -filter_mat(:,Pmax+2:end,n)],xN(Pmax+1+j));
         beta (j,n) = xN(Pmax+1+j) + filter(filter_mat(:,Pmax+2:end,n),[1],beta(j,n-Qmax:n-1));
       end
     else
@@ -88,8 +84,6 @@ n=n-1;
 disp('Número de iterações usadas:')
 disp(n)
 
-##disp('Resultados intermediários:')
-##disp(filter_mat(:,:,1:n))
 for i=1:N
   figure
   plot(filter_mat(:,i,1:n))
@@ -122,7 +116,7 @@ plot(20*log10(abs(err(1:n))))
 title('Erro em dB')
 grid on
 
-% checking these plots, we see that our filter rapidly converges to the
+% checking these plots, we see if our filter rapidly converges to the
 % unknown filter
 
  figure
