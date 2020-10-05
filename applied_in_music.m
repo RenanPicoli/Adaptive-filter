@@ -14,7 +14,6 @@ step_grad = 1;
 
 original = load('rise_original','-ascii');
 fs = 44100;% original sampling frequency
-% original = audioread('Rise From The Ashes.mp3');
 
 x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
 
