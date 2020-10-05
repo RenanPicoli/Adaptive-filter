@@ -7,7 +7,7 @@
 %w: output: filtro obtido
 %n: output: número de iteracoes usadas
 
-function [y,w,n] = adaptive_filter(x,d,N,tol)
+function [y,w,n] = adaptive_filter(x,d,N=6,tol=1e-5)
 L=length(x);
 err=zeros(1,L);
 xN=zeros(1,N);% vector with last N samples
