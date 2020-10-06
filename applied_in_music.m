@@ -8,7 +8,6 @@ close all
 % pkg load control
 P=0;% número certo de zeros
 Q=1;% número certo de polos
-%u=[0.5 sqrt(2)/2 0.5 -1 -2]%input("Entre com os coeficientes do filtro desconhecido:")
 
 % coeficientes dos multiplicadores no circuito
 % u(1:P+1): coeficientes de feed forward
@@ -16,11 +15,12 @@ Q=1;% número certo de polos
 % u = [b0 .. bP a1 .. aQ]
 % y(n) = b0x(n)+..+bPx(n-P)+a1y(n-1)..aQy(n-Q)
 u=[0.5 -0.5]
+%u=[0.5 sqrt(2)/2 0.5 -1 -2]
 
 [original,fs] = audioread('Rise From The Ashes.ogg');
 
 x = original(:,1);% x foi gravada com 2 canais, vamos pegar apenas o primeiro
-%x=ones(1,62000); if step function is applied, does not converge! 
+%x=ones(1,62000); if step function is applied, does not converge to u 
 
 pkg load signal % para usar downsample()
 downsample_factor = 2;
@@ -35,8 +35,8 @@ d=filter(u(1:P+1),[1 -u(P+2:end)],x);% d of desired response, same length as x
 
 n=1; % index of iteration being performed/ sample being taken into account
 
-Pmax=0;
-Qmax=1;
+Pmax=1;
+Qmax=2;
 N=Pmax+Qmax+1;%input("Entre com o número de coeficientes que deseja usar:")
 L=length(x);
 err=zeros(1,L);
@@ -44,10 +44,10 @@ xN=zeros(1,N);% vector with last Pmax+1 inputs AND last Qmax outputs
 filter_mat=zeros(1,N,L);
 alfa=zeros(Pmax+1,L);
 beta=zeros(Qmax,L);
-step=50;% this constant can be adjusted
+step=3;% this constant can be adjusted
 
 % para convergir: erro percentual entre dois filtros consecutivos 
-tol = 5e-7;% |h(n)-h(n-1)| / |h(n)|
+tol = 1e-13;% |h(n)-h(n-1)| / |h(n)|
 
 % itera sobre as amostras
 for n=1:L % cálculo de filtro em n+1 usando filtro em n
@@ -57,18 +57,18 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
     
     yn = filter_mat(:,:,n)*xN.';% saída atual
     % aproximação do erro: xN é aproximação do sinal completo
-	  err(n)=d(n) - yn;
+	  err(n) = d(n) - yn;
 
-    if n>1
+    if n>Qmax
       for i=1:Pmax+1 
-        alfa (i,n) = xN(i)+ filter(filter_mat(:,Pmax+2:end,n),[1],alfa(i,n-Qmax:n-1));
+        alfa(i,n) = xN(i) + filter(filter_mat(:,Pmax+2:end,n),[1],alfa(i,n-Qmax:n-1))(Qmax);
       end
       for j=1:Qmax
-        beta (j,n) = xN(Pmax+1+j) + filter(filter_mat(:,Pmax+2:end,n),[1],beta(j,n-Qmax:n-1));
+        beta(j,n) = xN(Pmax+1+j) + filter(filter_mat(:,Pmax+2:end,n),[1],beta(j,n-Qmax:n-1)(Qmax));
       end
     else
-      alfa(:,1) = xN(1:Pmax+1);
-      beta(:,1) = xN(Pmax+2:end);
+      alfa(:,n) = xN(1:Pmax+1);% 0;
+      beta(:,n) = xN(Pmax+2:end);% 0;
     end
     
     delta_filter = 2*step*err(n)*[alfa(:,n)' beta(:,n)'];
@@ -122,21 +122,24 @@ grid on
 % checking these plots, we see if our filter rapidly converges to the
 % unknown filter
 
- figure
- hold on
- for i=1:10:n
-     plot(filter_mat(:,:,i));
- end
- stem([u zeros(1,N-length(u))])
- title('filtros')
+figure
+hold on
+plot_step=10^(round(log10(n))-1);
+for i=1:plot_step:n
+    plot(filter_mat(:,:,i));
+end
+stem([u zeros(1,N-length(u))])
+title('filtros')
 
 figure
 plot(d,'-b')
 hold on
 plot(filter(w(1:Pmax+1),[1 -w(Pmax+2:end)],x),'-r')
 title('Respostas')
-##xt = min_x*downsample_factor/fs:max_x*downsample_factor/fs;
-##% altera a unidade do eixo x de amostras para segundos
-##set(gca,'xticklabel',xt);
-##xlabel('tempo(s)')
+time_step = (max_x-min_x)*downsample_factor/(100*fs);
+time_step = 10^(round(log10(time_step))-1);%"arrendonda para baixo"
+xt = min_x*downsample_factor/fs:time_step:max_x*downsample_factor/fs;
+% altera a unidade do eixo x de amostras para segundos
+set(gca,'xticklabel',xt);
+xlabel('tempo(s)')
 legend('filtro desconhecido','filtro adaptativo')
