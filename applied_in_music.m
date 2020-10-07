@@ -35,8 +35,8 @@ d=filter(u(1:P+1),[1 -u(P+2:end)],x);% d of desired response, same length as x
 
 n=1; % index of iteration being performed/ sample being taken into account
 
-Pmax=1;
-Qmax=2;
+Pmax=0;
+Qmax=1;
 N=Pmax+Qmax+1;%input("Entre com o número de coeficientes que deseja usar:")
 L=length(x);
 err=zeros(1,L);
@@ -44,7 +44,7 @@ xN=zeros(1,N);% vector with last Pmax+1 inputs AND last Qmax outputs
 filter_mat=zeros(1,N,L);
 alfa=zeros(Pmax+1,L);
 beta=zeros(Qmax,L);
-step=3;% this constant can be adjusted
+step=zeros(1,L);% this parameter is adjusted to accelerate convergence
 
 % para convergir: erro percentual entre dois filtros consecutivos 
 tol = 1e-13;% |h(n)-h(n-1)| / |h(n)|
@@ -54,6 +54,7 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
     %xN contém as últimas Pmax+1 entradas e Qmax saídas
     % atualiza com última entrada
     xN = [x(n) xN(1:Pmax) xN(Pmax+2:N)];
+    step(n)=min(1/(2*xN*xN.'),10000);% this parameter is adjusted to accelerate convergence
     
     yn = filter_mat(:,:,n)*xN.';% saída atual
     % aproximação do erro: xN é aproximação do sinal completo
@@ -71,7 +72,7 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
       beta(:,n) = xN(Pmax+2:end);% 0;
     end
     
-    delta_filter = 2*step*err(n)*[alfa(:,n)' beta(:,n)'];
+    delta_filter = 2*step(n)*err(n)*[alfa(:,n)' beta(:,n)'];
     filter_mat(:,:,n+1) = filter_mat(:,:,n) + delta_filter;
     %xN contém as últimas Pmax+1 entradas e Qmax saídas
     % atualiza com a saída atual (será o y(n-1) da próxima iteração)
@@ -143,3 +144,10 @@ xt = min_x*downsample_factor/fs:time_step:max_x*downsample_factor/fs;
 set(gca,'xticklabel',xt);
 xlabel('tempo(s)')
 legend('filtro desconhecido','filtro adaptativo')
+
+figure
+plot(x,'-b')
+hold on
+plot(step,'-r')
+title('step size \mu')
+legend('entrada','step \mu')
