@@ -1,13 +1,13 @@
 % ver: https://en.wikipedia.org/wiki/Least_mean_squares_filter#Normalized_least_mean_squares_filter_(NLMS)
-% assumirei ausência de interferencia entre a saída do filtro u e a resposta d
+% assumirei ausÃªncia de interferencia entre a saÃ­da do filtro u e a resposta d
 clear;
 close all
 
-% Objetivo: fazer um filtro cuja saída y para a excitação x seja igual a resposta desejada d 
+% Objetivo: fazer um filtro cuja saÃ­da y para a excitaÃ§Ã£o x seja igual a resposta desejada d 
 
 % pkg load control
-P=0;% número certo de zeros
-Q=1;% número certo de polos
+P=0;% nÃºmero certo de zeros
+Q=1;% nÃºmero certo de polos
 
 % coeficientes dos multiplicadores no circuito
 % u(1:P+1): coeficientes de feed forward
@@ -26,7 +26,7 @@ pkg load signal % para usar downsample()
 downsample_factor = 2;
 x = downsample(x,downsample_factor);
 % esse algoritmo precisa que xN != 0
-% para acelerar a convergência, pode-se aumentar a potência da entrada
+% para acelerar a convergÃªncia, pode-se aumentar a potÃªncia da entrada
 min_x=3200;
 max_x=30000;
 x = x(min_x:max_x);
@@ -37,7 +37,7 @@ n=1; % index of iteration being performed/ sample being taken into account
 
 Pmax=0;
 Qmax=1;
-N=Pmax+Qmax+1;%input("Entre com o número de coeficientes que deseja usar:")
+N=Pmax+Qmax+1;%input("Entre com o nÃºmero de coeficientes que deseja usar:")
 L=length(x);
 err=zeros(1,L);
 xN=zeros(1,N);% vector with last Pmax+1 inputs AND last Qmax outputs
@@ -50,14 +50,14 @@ step=zeros(1,L);% this parameter is adjusted to accelerate convergence
 tol = 1e-13;% |h(n)-h(n-1)| / |h(n)|
 
 % itera sobre as amostras
-for n=1:L % cálculo de filtro em n+1 usando filtro em n
-    %xN contém as últimas Pmax+1 entradas e Qmax saídas
-    % atualiza com última entrada
+for n=1:L % cÃ¡lculo de filtro em n+1 usando filtro em n
+    %xN contÃ©m as Ãºltimas Pmax+1 entradas e Qmax saÃ­das
+    % atualiza com Ãºltima entrada
     xN = [x(n) xN(1:Pmax) xN(Pmax+2:N)];
     step(n)=min(1/(2*xN*xN.'),10000);% this parameter is adjusted to accelerate convergence
     
-    yn = filter_mat(:,:,n)*xN.';% saída atual
-    % aproximação do erro: xN é aproximação do sinal completo
+    yn = filter_mat(:,:,n)*xN.';% saÃ­da atual
+    % aproximaÃ§Ã£o do erro: xN Ã© aproximaÃ§Ã£o do sinal completo
 	  err(n) = d(n) - yn;
 
     if n>Qmax
@@ -74,17 +74,17 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
     
     delta_filter = 2*step(n)*err(n)*[alfa(:,n)' beta(:,n)'];
     filter_mat(:,:,n+1) = filter_mat(:,:,n) + delta_filter;
-    %xN contém as últimas Pmax+1 entradas e Qmax saídas
-    % atualiza com a saída atual (será o y(n-1) da próxima iteração)
+    %xN contÃ©m as Ãºltimas Pmax+1 entradas e Qmax saÃ­das
+    % atualiza com a saÃ­da atual (serÃ¡ o y(n-1) da prÃ³xima iteraÃ§Ã£o)
     xN = [xN(1:Pmax+1) yn xN(Pmax+2:N-1)];
-    % testa se já convergiu
+    % testa se jÃ¡ convergiu
     if(norm(delta_filter)/norm(filter_mat(:,:,n)) < tol)
         break;
     end
     n=n+1;
 end
 n=n-1;
-disp('Número de iterações usadas:')
+disp('NÃºmero de iteraÃ§Ãµes usadas:')
 disp(n)
 
 for i=1:N
@@ -96,7 +96,7 @@ for i=1:N
   else
     plot(zeros(1,n))
   end
-  string = sprintf('%iº coeficiente',i);
+  string = sprintf('%iÂº coeficiente',i);
   title(string)
   grid on
 end
@@ -114,7 +114,7 @@ stem(err(1:n))
 title('Erro')
 grid on
 
-% algumas vezes pode ser mais fácil observar em escala logaritmica
+% algumas vezes pode ser mais fÃ¡cil observar em escala logaritmica
 figure
 plot(20*log10(abs(err(1:n))))
 title('Erro em dB')
@@ -146,8 +146,8 @@ xlabel('tempo(s)')
 legend('filtro desconhecido','filtro adaptativo')
 
 figure
-plot(x,'-b')
+hx=plot(x,'-b');%handle to input line (plot)
 hold on
-plot(step,'-r')
+hstep=plot(step,'-r');%handle to step line (plot)
 title('step size \mu')
 legend('entrada','step \mu')
