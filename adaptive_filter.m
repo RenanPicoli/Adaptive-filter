@@ -1,40 +1,62 @@
-%Objetivo: fazer um filtro cuja saÌda y para a excitaÁ„o x seja igual a resposta desejada d (ou seja, descobrir o filtro u usado)
+%Objetivo: fazer um filtro cuja sa√≠da y para a excita√ß√£o x seja igual a resposta desejada d (ou seja, descobrir o filtro u usado)
 %x: input: input signal
 %u: input: Entre com os coeficientes do filtro desconhecido
-%N: input: Entre com o n˙mero de coeficientes que deseja usar
-%tol: input: Entre com o valor da toler‚ncia no erro entre y e d (norma euclidiana)
-%y: output: saÌda do FA para entrada x
+%N: input: Entre com o n√∫mero de coeficientes que deseja usar
+%tol: input: Entre com o valor da toler√¢ncia no erro entre y e d (norma euclidiana)
+%y: output: sa√≠da do FA para entrada x
 %w: output: filtro obtido
-%n: output: n˙mero de iteracoes usadas
+%n: output: n√∫mero de iteracoes usadas
 
-function [y,w,n] = adaptive_filter(x,d,N=6,tol=1e-5)
+function [y,w,n] = adaptive_filter(x,d,Pmax,Qmax,tol=1e-5)
+N=Pmax+Qmax+1;%input("Entre com o n√∫mero de coeficientes que deseja usar:")
 L=length(x);
 err=zeros(1,L);
-xN=zeros(1,N);% vector with last N samples
-filter=zeros(1,N,L);
-step_grad=1;
+xN=zeros(1,N);% vector with last Pmax+1 inputs AND last Qmax outputs
+filter_mat=zeros(1,N,L);
+alfa=zeros(Pmax+1,L);
+beta=zeros(Qmax,L);
+step=zeros(1,L);% this parameter is adjusted to accelerate convergence
+
+% para convergir: erro percentual entre dois filtros consecutivos 
+tol = 1e-13;% |h(n)-h(n-1)| / |h(n)|
 
 % itera sobre as amostras
-for n=1:L % c·lculo de filtro em n+1 usando filtro em n
-    xN = [x(n) xN(1:N-1)];
-	err(n)=d(n) - filter(:,:,n)*xN.';% aproximaÁ„o do erro: xN È aproximaÁ„o do sinal completo
+for n=1:L % c√°lculo de filtro em n+1 usando filtro em n
+    %xN cont√©m as √∫ltimas Pmax+1 entradas e Qmax sa√≠das
+    % atualiza com √∫ltima entrada
+    xN = [x(n) xN(1:Pmax) xN(Pmax+2:N)];
+    step(n)=min(1/(2*xN*xN.'),10000);% this parameter is adjusted to accelerate convergence
     
-    if (xN*xN.' ~= 0)
-        delta_filter = step_grad*err(n)*xN/(xN*xN.');
-        filter(:,:,n+1) = filter(:,:,n) + delta_filter;
-        % testa se j· convergiu
-        if(norm(delta_filter)/norm(filter(:,:,n)) < tol)
-            break;
-        end
-    end
-    n=n+1;	
-end
+    yn = filter_mat(:,:,n)*xN.';% sa√≠da atual
+    % aproxima√ß√£o do erro: xN √© aproxima√ß√£o do sinal completo
+	  err(n) = d(n) - yn;
 
+    if n>Qmax
+      for i=1:Pmax+1 
+        alfa(i,n) = xN(i) + filter(filter_mat(:,Pmax+2:end,n),[1],alfa(i,n-Qmax:n-1))(Qmax);
+      end
+      for j=1:Qmax
+        beta(j,n) = xN(Pmax+1+j) + filter(filter_mat(:,Pmax+2:end,n),[1],beta(j,n-Qmax:n-1)(Qmax));
+      end
+    else
+      alfa(:,n) = xN(1:Pmax+1);% 0;
+      beta(:,n) = xN(Pmax+2:end);% 0;
+    end
+    
+    delta_filter = 2*step(n)*err(n)*[alfa(:,n)' beta(:,n)'];
+    filter_mat(:,:,n+1) = filter_mat(:,:,n) + delta_filter;
+    %xN cont√©m as √∫ltimas Pmax+1 entradas e Qmax sa√≠das
+    % atualiza com a sa√≠da atual (ser√° o y(n-1) da pr√≥xima itera√ß√£o)
+    xN = [xN(1:Pmax+1) yn xN(Pmax+2:N-1)];
+    % testa se j√° convergiu
+    if(norm(delta_filter)/norm(filter_mat(:,:,n)) < tol)
+        break;
+    end
+    n=n+1;
+end
 n=n-1;
+
 w=filter(:,:,n);
-y=conv(w,x);
-disp('Filtro calculado');
-disp(w)
-disp('N˙mero de iteraÁıes usadas:')
-disp(n)
+y=filter(w(1:Pmax+1),[1 -w(Pmax+2:end)],x);
+
 end
