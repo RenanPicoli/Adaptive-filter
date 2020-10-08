@@ -87,9 +87,10 @@ n=n-1;
 disp('Número de iterações usadas:')
 disp(n)
 
+hfilter = zeros(1,N);% handle of i-th coefficient line (plot)
 for i=1:N
   figure
-  plot(filter_mat(:,i,1:n))
+  hfilter(i)=plot(filter_mat(:,i,1:n))
   hold on
   if (i <= length(u))
     plot(u(i)*ones(1,n))
@@ -110,13 +111,13 @@ disp(w(1:Pmax+1))
 disp(w(Pmax+2:end))
 
 figure
-stem(err(1:n))
+herr=stem(err(1:n));% handle of error line (plot)
 title('Erro')
 grid on
 
 % algumas vezes pode ser mais fácil observar em escala logaritmica
 figure
-plot(20*log10(abs(err(1:n))))
+herrdB=plot(20*log10(abs(err(1:n))));% handle of error dB line (plot)
 title('Erro em dB')
 grid on
 
@@ -133,9 +134,12 @@ stem([u zeros(1,N-length(u))])
 title('filtros')
 
 figure
-plot(d,'-b')
+hd=plot(d,'-b');% handle of d signal line (plot)
 hold on
-plot(filter(w(1:Pmax+1),[1 -w(Pmax+2:end)],x),'-r')
+
+% handle of d signal line (plot)
+hy=plot(filter(w(1:Pmax+1),[1 -w(Pmax+2:end)],x),'-r');
+
 title('Respostas')
 time_step = (max_x-min_x)*downsample_factor/(100*fs);
 time_step = 10^(round(log10(time_step))-1);%"arrendonda para baixo"
@@ -146,8 +150,8 @@ xlabel('tempo(s)')
 legend('filtro desconhecido','filtro adaptativo')
 
 figure
-plot(x,'-b')
+h1=plot(x,'-b')
 hold on
-plot(step,'-r')
+h2=plot(step,'-r')
 title('step size \mu')
 legend('entrada','step \mu')
