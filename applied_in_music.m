@@ -117,6 +117,7 @@ legend('entrada','step \mu');
 set(groot,"currentfigure",subplot_fig);
 subplot(2,4,N+2)
 hstepsubplot1=copyobj(hstep1,gca);
+title('step size \mu constante');
 grid on;
 
 %%% Adaptive Filter with adapted step size %%%%%%%%
@@ -200,6 +201,7 @@ legend('entrada','step \mu');
 set(groot,"currentfigure",subplot_fig);
 subplot(2,4,N+2+4)
 hstepsubplot2=copyobj(hstep2,gca);
+title('step size \mu variável');
 grid on;
 
 %%%%%% plots na mesma figura, para comparação
