@@ -7,34 +7,33 @@
 %w: output: filtro obtido
 %n: output: número de iteracoes usadas
 
-function [y,w,n] = adaptive_filter(x,d,N=6,tol=1e-5)
+function [y,w,err,filter_mat,n] = adaptive_filter(x,d,N=6,tol=1e-5)
 L=length(x);
 err=zeros(1,L);
-xN=zeros(1,N);% vector with last N samples
-filter=zeros(1,N,L);
-step_grad=1;
+xN=zeros(1,N);% vector with last N inputs
+filter_mat=zeros(1,N,L);
+
+% para o método do gradiente descendente
+step_grad = 1;
 
 % itera sobre as amostras
 for n=1:L % cálculo de filtro em n+1 usando filtro em n
+  
+    %xN contém as últimas N entradas
     xN = [x(n) xN(1:N-1)];
-	err(n)=d(n) - filter(:,:,n)*xN.';% aproximação do erro: xN é aproximação do sinal completo
+	  err(n)=d(n) - filter_mat(:,:,n)*xN.';% aproximação do erro: xN é aproximação do sinal completo
     
     if (xN*xN.' ~= 0)
         delta_filter = step_grad*err(n)*xN/(xN*xN.');
-        filter(:,:,n+1) = filter(:,:,n) + delta_filter;
+        filter_mat(:,:,n+1) = filter_mat(:,:,n) + delta_filter;
         % testa se já convergiu
-        if(norm(delta_filter)/norm(filter(:,:,n)) < tol)
+        if(norm(delta_filter)/norm(filter_mat(:,:,n)) < tol)
             break;
         end
     end
-    n=n+1;	
+    n=n+1;
 end
-
 n=n-1;
-w=filter(:,:,n);
+w=filter_mat(:,:,n);
 y=conv(w,x);
-disp('Filtro calculado');
-disp(w)
-disp('Número de iterações usadas:')
-disp(n)
 end
