@@ -1,8 +1,10 @@
 %Objetivo: fazer um filtro cuja saída y para a excitação x seja igual a resposta desejada d (ou seja, descobrir o filtro u usado)
 %x: input: input signal
-%u: input: Entre com os coeficientes do filtro desconhecido
-%N: input: Entre com o número de coeficientes que deseja usar
+%d: input: Resposta do filtro desconhecido à entrada x
+%Pmax: input: número máximo -1 de coeficientes na porção feed forward
+%Qmax: input: número máximo de coeficientes na porção feedback
 %tol:input: erro percentual entre dois filtros consecutivos |h(n+1)-h(n)| / |h(n)|
+%varargin: input: argumento opcional: valor fixo de step size
 %y: output: saí­da do FA para entrada x
 %w: output: filtro obtido
 %filters: output: filtros intermediários calculados
