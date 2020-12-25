@@ -19,8 +19,6 @@ L=length(x);
 err=zeros(1,L);
 xN=zeros(1,N);% vector with last Pmax+1 inputs AND last Qmax outputs
 filter_mat=zeros(1,N,L);
-alfa=zeros(Pmax+1,L);
-beta=zeros(Qmax,L);
 step=zeros(1,L);% this parameter is adjusted to accelerate convergence
 if (nargin > 5)
   string = sprintf('Using input step=%d\n',varargin{1});
@@ -41,27 +39,19 @@ for n=1:L % cálculo de filtro em n+1 usando filtro em n
     yn = filter_mat(:,:,n)*xN.';% saí­da atual
     % aproximação do erro: xN é aproximação do sinal completo
 	  err(n) = d(n) - yn;
-
-    if n>Qmax
-      for i=1:Pmax+1 
-        alfa(i,n) = xN(i) + filter(filter_mat(:,Pmax+2:end,n),[1],alfa(i,n-Qmax:n-1))(Qmax);
-      end
-      for j=1:Qmax
-        beta(j,n) = xN(Pmax+1+j) + filter(filter_mat(:,Pmax+2:end,n),[1],beta(j,n-Qmax:n-1)(Qmax));
-      end
-    else
-      alfa(:,n) = xN(1:Pmax+1);% 0;
-      beta(:,n) = xN(Pmax+2:end);% 0;
-    end
     
-    delta_filter = 2*step(n)*err(n)*[alfa(:,n)' beta(:,n)'];
+    delta_filter = 2*step(n)*err(n)*xN;% [alfa beta] approx xN: Feintuch's approximation
     filter_mat(:,:,n+1) = filter_mat(:,:,n) + delta_filter;
     %xN contém as últimas Pmax+1 entradas e Qmax saí­das
     % atualiza com a saída atual (será o y(n-1) da próxima iteração)
     xN = [xN(1:Pmax+1) yn xN(Pmax+2:N-1)];
     % testa se já convergiu
     if(norm(delta_filter)/norm(filter_mat(:,:,n)) < tol)
-        break;
+      if (norm(filter_mat(:,:,n))==0)
+        disp('Divisão por zero na iteração:');
+        n
+       end;
+      break;
     end
     n=n+1;
 end
