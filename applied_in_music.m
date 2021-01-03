@@ -23,8 +23,8 @@ pkg load control% para usar tf, bode, etc
 ##% Compensation for unitary gain
 ##b=(1/g)*b
 
-b=[1 0.1 -0.1 -0.5 0.5 -0.2]
-a=[1 0.1 -0.2 -0.4 0.1 -0.1]
+b=[1 0 -2 1]
+a=[1.000000   0.590110   0.582896   0.302579   0.076053]
 
 % diplay P, Q, direct form 1 coeffs
 b_direct_form_1 = b
@@ -54,8 +54,8 @@ x = x(min_x:max_x);
 
 d=filter(u(1:P+1),[1 -u(P+2:end)],x);% d of desired response, same length as x
 
-Pmax=5;
-Qmax=5;
+Pmax=3;
+Qmax=4;
 tol=1e-13;
 
 %%% Adaptive Filter with adapted step size %%%%%%%%
@@ -95,7 +95,7 @@ disp(w2(Pmax+2:end))
 ##grid on
 
 % algumas vezes pode ser mais fácil observar em escala logaritmica
-subplot(2,6,[10 12])
+subplot(2,6,[9 12])
 herrdB2=plot(20*log10(abs(err2(1:n2))));% handle of error dB line (plot)
 title('Erro em dB')
 grid on
